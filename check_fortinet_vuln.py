@@ -45,7 +45,7 @@ def display_usage_instructions():
     print(usage_banner)
 
 
-def scan_fortinet_for_vulnerability(target_ip_address):
+def scan_fortinet_for_vulnerability(target_ip_address, configuration_file_path: pathlib.Path):
     """
     Perform a vulnerability scan on a Fortinet firewall by sending an HTTPS GET request
     to the target IP address, extracting the ETag header, and checking if it matches
@@ -99,8 +99,7 @@ def scan_fortinet_for_vulnerability(target_ip_address):
     scan_result["etag_value"] = etag_value
 
     # Read EGBL.config to check if the ETag indicates a vulnerable device
-    configuration_file_path = "EGBL.config"
-    with open(configuration_file_path, "r", encoding="utf-8") as config_file:
+    with configuration_file_path.open("r", encoding="utf-8") as config_file:
         config_file_content = config_file.read()
 
     # Determine vulnerability based on ETag presence in EGBL.config
@@ -218,7 +217,7 @@ def main():
 
     # Perform the vulnerability scan
     print("## Scanning for vulnerabilities...")
-    scan_result = scan_fortinet_for_vulnerability(target_ip_address)
+    scan_result = scan_fortinet_for_vulnerability(target_ip_address, configuration_file_path)
 
     # Save the scan results to a JSON file
     print("## Saving scan results...")
