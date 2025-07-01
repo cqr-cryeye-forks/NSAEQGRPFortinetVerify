@@ -213,7 +213,9 @@ def main():
     output_json_file_path = args.output
 
     MAIN_DIRECTORY: Final[pathlib.Path] = pathlib.Path(__file__).parents[0]
-    OUTPUT_JSON: Final[pathlib.Path] = MAIN_DIRECTORY / output_json_file_path
+    OUTPUT_FILE: Final[pathlib.Path] = pathlib.Path(output_json_file_path)
+    OUTPUT_JSON: Final[pathlib.Path] = MAIN_DIRECTORY / OUTPUT_FILE.relative_to("/")
+
     # Log the start of the scan
     print(f"## Initiating vulnerability scan for IP address: {target_ip_address}")
 
