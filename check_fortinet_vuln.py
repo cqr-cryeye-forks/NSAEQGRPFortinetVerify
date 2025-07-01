@@ -9,7 +9,9 @@
 import argparse
 import json
 import os
+import pathlib
 import sys
+from typing import Final
 
 import requests
 from urllib3 import disable_warnings
@@ -127,7 +129,7 @@ def scan_fortinet_for_vulnerability(target_ip_address):
     return scan_result
 
 
-def save_scan_results_to_json(scan_result, output_json_file_path):
+def save_scan_results_to_json(scan_result, output_json_file_path: pathlib.Path):
     """
     Save the scan results to a JSON file at the specified path.
 
@@ -139,7 +141,7 @@ def save_scan_results_to_json(scan_result, output_json_file_path):
         SystemExit: Exits with code 3 if the JSON file cannot be written.
     """
     try:
-        with open(output_json_file_path, "w", encoding="utf-8") as json_file:
+        with output_json_file_path.open("w", encoding="utf-8") as json_file:
             json.dump(scan_result, json_file, indent=4, ensure_ascii=False)
         print(f"## Scan results saved to '{output_json_file_path}'.")
     except IOError as json_write_error:
@@ -169,7 +171,7 @@ def parse_command_line_arguments():
 
     # Required argument: Target IP address
     argument_parser.add_argument(
-        "--target-ip-address",
+        "--target",
         type=str,
         required=True,
         help="The IPv4 address of the Fortinet firewall to scan (e.g., 192.168.1.1)."
@@ -177,9 +179,9 @@ def parse_command_line_arguments():
 
     # Optional argument: Suffix for the output JSON file
     argument_parser.add_argument(
-        "--output-json-suffix",
+        "--output",
         type=str,
-        default="scan_results.json",
+        required=True,
         help=(
             "Suffix for the output JSON file (default: 'scan_results'). "
             "The file will be named '<suffix>.json' in the current directory."
@@ -206,10 +208,12 @@ def main():
         - 3: Failure to write JSON output file.
     """
     # Parse command-line arguments
-    parsed_arguments = parse_command_line_arguments()
-    target_ip_address = parsed_arguments.target_ip_address
-    output_json_file_path = parsed_arguments.output_json_suffix
+    args = parse_command_line_arguments()
+    target_ip_address = args.target
+    output_json_file_path = args.output
 
+    MAIN_DIRECTORY: Final[pathlib.Path] = pathlib.Path(__file__).parents[0]
+    OUTPUT_JSON: Final[pathlib.Path] = MAIN_DIRECTORY / output_json_file_path
     # Log the start of the scan
     print(f"## Initiating vulnerability scan for IP address: {target_ip_address}")
 
@@ -223,7 +227,7 @@ def main():
 
     # Save the scan results to a JSON file
     print("## Saving scan results...")
-    save_scan_results_to_json(scan_result, output_json_file_path)
+    save_scan_results_to_json(scan_result, OUTPUT_JSON)
 
 
 if __name__ == "__main__":
