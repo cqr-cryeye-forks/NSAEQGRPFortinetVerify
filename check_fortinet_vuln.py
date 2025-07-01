@@ -197,8 +197,7 @@ def main():
     output_json_file_path = args.output
 
     MAIN_DIRECTORY: Final[pathlib.Path] = pathlib.Path(__file__).parents[0]
-    OUTPUT_FILE: Final[pathlib.Path] = pathlib.Path(output_json_file_path)
-    OUTPUT_JSON: Final[pathlib.Path] = MAIN_DIRECTORY / OUTPUT_FILE.relative_to("/")
+    OUTPUT_JSON: Final[pathlib.Path] = MAIN_DIRECTORY / pathlib.Path(output_json_file_path)
 
     configuration_file: Final[pathlib.Path] = pathlib.Path("EGBL.config")
     configuration_file_path: Final[pathlib.Path] = MAIN_DIRECTORY / configuration_file
