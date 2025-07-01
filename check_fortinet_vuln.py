@@ -45,23 +45,6 @@ def display_usage_instructions():
     print(usage_banner)
 
 
-def verify_configuration_file_exists():
-    """
-    Check if the EGBL.config file exists in the current working directory.
-    This file contains mappings of ETag values to vulnerable Fortinet devices,
-    including model, firmware version, and stack addresses.
-
-    Raises:
-        SystemExit: Exits with code 2 if EGBL.config is not found.
-    """
-    configuration_file_path = "EGBL.config"
-    if os.path.isfile(configuration_file_path):
-        print(f"## Configuration file '{configuration_file_path}' found successfully.")
-    else:
-        print(f"## ERROR: Configuration file '{configuration_file_path}' not found in current directory.")
-        sys.exit(2)
-
-
 def scan_fortinet_for_vulnerability(target_ip_address):
     """
     Perform a vulnerability scan on a Fortinet firewall by sending an HTTPS GET request
@@ -97,14 +80,16 @@ def scan_fortinet_for_vulnerability(target_ip_address):
         )
     except requests.exceptions.RequestException as connection_error:
         scan_result["vulnerability_status"] = "error"
-        scan_result["error_message"] = str(connection_error)
+        scan_result["error_message"] = "Failed to connect to the target. The server may be down or unreachable."
         print(f"## ERROR: Failed to connect to {target_ip_address}: {connection_error}")
         return scan_result
 
     # Check if the ETag header is present in the HTTP response
     if "ETag" not in http_response.headers:
         scan_result["vulnerability_status"] = "no_etag"
-        scan_result["error_message"] = "No ETag header returned; likely not a Fortinet device or not vulnerable."
+        scan_result["error_message"] = (
+            "No ETag header found in the response. The target is likely not a Fortinet device or is not vulnerable."
+        )
         print(f"\n## WARNING: No ETag header returned by {target_ip_address}")
         print("----> LIKELY NOT A FORTINET DEVICE OR NOT VULNERABLE")
         return scan_result
@@ -216,12 +201,20 @@ def main():
     OUTPUT_FILE: Final[pathlib.Path] = pathlib.Path(output_json_file_path)
     OUTPUT_JSON: Final[pathlib.Path] = MAIN_DIRECTORY / OUTPUT_FILE.relative_to("/")
 
+    configuration_file: Final[pathlib.Path] = pathlib.Path("EGBL.config")
+    configuration_file_path: Final[pathlib.Path] = MAIN_DIRECTORY / configuration_file
+
     # Log the start of the scan
     print(f"## Initiating vulnerability scan for IP address: {target_ip_address}")
 
     # Verify that EGBL.config exists
     print("## Verifying configuration file...")
-    verify_configuration_file_exists()
+    if configuration_file_path.is_file():
+        print(f"## Configuration file '{configuration_file_path}' found successfully.")
+    else:
+        print(f"## ERROR: Configuration file '{configuration_file_path}' not found in current directory.")
+        sys.exit(2)
+
 
     # Perform the vulnerability scan
     print("## Scanning for vulnerabilities...")
